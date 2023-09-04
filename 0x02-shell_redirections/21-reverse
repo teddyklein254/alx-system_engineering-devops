@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "$(--reverse <<< "$1")"
+tr -d 'cC'
