@@ -1,0 +1,2 @@
+#!/bin/bash
+perl -e 'print $_,"\n"for grep!/oo/,(join"",@$_)for[ a..z ]x 2'
