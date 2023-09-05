@@ -1,2 +1,2 @@
 #!/bin/bash
-printf "%x: Hexadecimal\n" "$((DECIMAL))
+printf "Hexadecimal: %x\n" "${DECIMAL}"
