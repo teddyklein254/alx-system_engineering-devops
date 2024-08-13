@@ -1,32 +1,39 @@
-#!usr/bin/python3
+#!/usr/bin/python3
 """
-prints title of the first 10 hot posts listed for a given subreddit
+Prints the titles of the first 10 hot posts listed for a given subreddit
 """
 
-from requests import get
-
+from requests import get, HTTPError
 
 def top_ten(subreddit):
     """
-    function that queries the Reddit API and prints the titles of the first
-    10 hot posts listed for a given subreddit
+    Function that queries the Reddit API and prints the titles of the first
+    10 hot posts listed for a given subreddit.
     """
 
-    if subreddit is None or not isinstance(subreddit, str):
+    if not isinstance(subreddit, str) or not subreddit:
         print("None")
+        return
 
-    user_agent = {'User-agent': 'Google Chrome Version 81.0.4044.129'}
+    user_agent = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
     params = {'limit': 10}
-    url = 'https://www.reddit.com/r/{}/hot/.json'.format(subreddit)
-
-    response = get(url, headers=user_agent, params=params)
-    results = response.json()
+    url = f'https://www.reddit.com/r/{subreddit}/hot/.json'
 
     try:
-        my_data = results.get('data').get('children')
+        response = get(url, headers=user_agent, params=params)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
+        results = response.json()
+
+        my_data = results.get('data', {}).get('children', [])
+
+        if not my_data:
+            print("None")
+            return
 
         for i in my_data:
-            print(i.get('data').get('title'))
+            print(i.get('data', {}).get('title', 'None'))
 
-    except Exception:
+    except HTTPError:
         print("None")
+    except Exception as e:
+        print(f"None: {e}")
