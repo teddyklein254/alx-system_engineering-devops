@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Set the path to your Gunicorn executable
+GUNICORN_BIN="/usr/bin/gunicorn"
+
+# Set the number of workers
+WORKERS=3
+
+# Set the bind address and port
+BIND="0.0.0.0:5003"
+
+# Set the path to your application
+APP="/home/ubuntu/AirBnB_clone_v4/web_dynamic/2-hbnb.py"
+
+# Get the master PID
+MASTER_PID=$(pgrep -f "gunicorn.*master.*$BIND" | head -n 1)
+
+# Check if master PID exists
+if [ -z "$MASTER_PID" ]; then
+  echo "Gunicorn master process not found. Exiting."
+  exit 1
+fi
+
+# Get the worker PIDs
+WORKER_PIDS=$(pgrep -P $MASTER_PID)
+
+# Loop through each worker and gracefully shut them down
+for WORKER_PID in $WORKER_PIDS; do
+  # Send the TERM signal to the worker
+  kill $WORKER_PID
+
+  # Wait for the worker to finish processing the current request
+  while ps -p $WORKER_PID > /dev/null; do
+    sleep 1
+  done
+
+  # Start a new worker with the new application code or configuration
+  $GUNICORN_BIN --bind $BIND --workers $WORKERS $APP &
+done
+
+# Wait for all new workers to start
+sleep 2
+
+# Check if all new workers are running
+NEW_WORKER_PIDS=$(pgrep -P $MASTER_PID)
+if [ "$(echo "$NEW_WORKER_PIDS" | wc -l)" -ne "$WORKERS" ]; then
+  echo "Not all new workers started successfully. Exiting."
+  exit 1
+fi
+
+# All new workers are running, so we can exit the master process
+kill $MASTER_PID
